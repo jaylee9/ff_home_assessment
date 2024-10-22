@@ -22,16 +22,19 @@ Follow these steps to set up the project locally:
    Clone the Git repository to your local machine:
    ```bash
    git clone https://github.com/onedev111/ff_home_assessment.git
+   ```
+   ```bash
    cd ff_home_assessment
+   ```
 
-2. **Install PHP dependencies with Composer:**
+3. **Install PHP dependencies with Composer:**
 
    Once inside the project directory, run the following command to install all PHP dependencies:
    ```bash
    composer install
    ```
 
-3. **Set up the `.env` file:**
+4. **Set up the `.env` file:**
 
    Copy the `.env.example` file and rename it to `.env`:
    ```bash
@@ -48,14 +51,14 @@ Follow these steps to set up the project locally:
    DB_PASSWORD=your_database_password
    ```
 
-4. **Generate the application key:**
+5. **Generate the application key:**
 
    Run the following command to generate a key for the application:
    ```bash
    php artisan key:generate
    ```
 
-5. **Run the migrations and seed the database:**
+6. **Run the migrations and seed the database:**
 
    To set up the database schema and seed it with initial data, run:
    ```bash
@@ -65,21 +68,21 @@ Follow these steps to set up the project locally:
    php artisan db:seed
    ```
 
-6. **Install JavaScript dependencies:**
+7. **Install JavaScript dependencies:**
 
    To manage the frontend dependencies, use npm:
    ```bash
    npm install
    ```
 
-7. **Compile the assets:**
+8. **Compile the assets:**
 
    Compile the frontend assets (CSS, JS, etc.):
    ```bash
    npm run dev
    ```
 
-8. **Run the development server:**
+9. **Run the development server:**
 
    Start the Laravel development server:
    ```bash

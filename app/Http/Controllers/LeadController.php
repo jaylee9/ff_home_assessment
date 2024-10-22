@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Cache;
 class LeadController extends Controller
 {
     /**
@@ -19,16 +19,30 @@ class LeadController extends Controller
     public function index(Request $request): Response
     {
         $perPage = $request->input('per_page', 5);
+        $search = $request->input( 'search' );
+        
         $validatedPerPage = filter_var($perPage, FILTER_VALIDATE_INT, [
             'options' => ['min_range' => 1],
         ]) ?: 5;
 
-        $leads = Lead::with('leadStatus')->latest()->paginate($perPage);
+        $currentPage = $request->input( 'page', 1 );
+        $cacheKey    = 'leads_' . md5( $validatedPerPage . $search . $currentPage );
+        
+        $leads = Cache::remember( $cacheKey, now()->addMinutes( 10 ), function () use ( $validatedPerPage, $search ) {
+            return Lead::with( 'leadStatus' )
+                ->when( $search, function ( $query, $search ) {
+                    return $query->where( 'name', 'like', "%{$search}%" )
+                        ->orWhere( 'email', 'like', "%{$search}%" );
+                } )
+                ->latest()
+                ->paginate( $validatedPerPage );
+        } );
         $statuses = LeadStatus::all();
 
         return Inertia::render('Leads/Index', [
             'leads' => $leads,
             'statuses' => $statuses,
+            'search' => $search
         ]);
     }
 
@@ -55,7 +69,7 @@ class LeadController extends Controller
         ]);
 
         Lead::create($validated);
-
+        $this->clearCache();
         return redirect(route('leads.index'))->with('success', 'Lead created successfully.');
     }
 
@@ -83,7 +97,7 @@ class LeadController extends Controller
         ]);
 
         $lead->update($validated);
-
+        $this->clearCache();
         return redirect(route('leads.index'))->with('success', 'Lead updated successfully.');
     }
 
@@ -93,7 +107,16 @@ class LeadController extends Controller
     public function destroy(Lead $lead): RedirectResponse
     {
         $lead->delete();
-
+        $this->clearCache();
         return redirect(route('leads.index'))->with('success', 'Lead deleted successfully.');
+    }
+    /**
+     * Clear the cache for leads.
+     *
+     * @return void
+     */
+    protected function clearCache()
+    {
+        Cache::flush();
     }
 }

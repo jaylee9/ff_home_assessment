@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Index({ auth, leads }) {
+export default function Index({ auth, leads, search }) {
     const [confirmDeleteId, setConfirmDeleteId] = useState(null); // State for the lead ID to delete
+    const { data, setData, get } = useForm({ search: search || '' });
 
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        get(route('leads.index'), { data: { search: data.search }, preserveState: true });
+    };
     const handleDelete = (id) => {
         setConfirmDeleteId(id); // Set the ID of the lead to delete
     };
@@ -17,7 +22,9 @@ export default function Index({ auth, leads }) {
             }
         });
     };
-
+    useEffect(() => {
+        setData('search', search || '');
+    }, [search]);
     return (
         <AuthenticatedLayout auth={auth}>
             <Head title="Leads" />
@@ -37,6 +44,18 @@ export default function Index({ auth, leads }) {
                         Create Lead
                     </Link>
                 </div>
+                <form onSubmit={handleSearchSubmit} className="mb-4">
+                    <input
+                        type="text"
+                        value={data.search}
+                        onChange={(e) => setData('search', e.target.value)}
+                        placeholder="Search by Name or Email"
+                        className="border rounded px-4 py-2"
+                    />
+                    <button type="submit" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md">
+                        Search
+                    </button>
+                </form>
                 <div className="overflow-x-auto">
                     <table className="min-w-full bg-white">
                         <thead>
@@ -74,7 +93,7 @@ export default function Index({ auth, leads }) {
                     {leads.links.map((link) => (
                         <Link
                             key={link.label}
-                            href={link.url}
+                            href={link.url + (data.search ? `&search=${data.search}` : '')}
                             className={`mr-1 px-3 py-1 border rounded-md ${link.active ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'}`}
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />
