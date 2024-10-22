@@ -3,28 +3,60 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Index({ auth, leads, search }) {
-    const [confirmDeleteId, setConfirmDeleteId] = useState(null); // State for the lead ID to delete
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const { data, setData, get } = useForm({ search: search || '' });
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         get(route('leads.index'), { data: { search: data.search }, preserveState: true });
     };
+
     const handleDelete = (id) => {
-        setConfirmDeleteId(id); // Set the ID of the lead to delete
+        setConfirmDeleteId(id);
     };
 
     const confirmDelete = () => {
-        // Use the delete link with method="delete"
         Inertia.delete(route('leads.destroy', confirmDeleteId), {
             onSuccess: () => {
-                setConfirmDeleteId(null); // Close the popup after deletion
+                setConfirmDeleteId(null);
             }
         });
     };
+
     useEffect(() => {
         setData('search', search || '');
     }, [search]);
+
+    // Prefetching adjacent pages without causing navigation
+    useEffect(() => {
+        const fetchPageData = async (page) => {
+            try {
+                const response = await fetch(route('leads.index', { page }), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                if (response.ok) {
+                    await response.json();
+                }
+            } catch (error) {
+                console.error('Error fetching page data:', error);
+            }
+        };
+
+        // Check if the previous page exists
+        if (leads.current_page > 1) {
+            fetchPageData(leads.current_page - 1);
+        }
+
+        // Check if the next page exists
+        if (leads.current_page < leads.last_page) {
+            fetchPageData(leads.current_page + 1);
+        }
+    }, [leads.current_page, leads.last_page]);
+
     return (
         <AuthenticatedLayout auth={auth}>
             <Head title="Leads" />

@@ -18,17 +18,19 @@ class LeadController extends Controller
      */
     public function index(Request $request): Response
     {
-        $perPage = $request->input('per_page', 5);
+        $perPage = $request->input('per_page', env('LEADS_PER_PAGE', 5));
         $search = $request->input( 'search' );
-        
+
         $validatedPerPage = filter_var($perPage, FILTER_VALIDATE_INT, [
             'options' => ['min_range' => 1],
         ]) ?: 5;
 
         $currentPage = $request->input( 'page', 1 );
         $cacheKey    = 'leads_' . md5( $validatedPerPage . $search . $currentPage );
-        
-        $leads = Cache::remember( $cacheKey, now()->addMinutes( 10 ), function () use ( $validatedPerPage, $search ) {
+
+        $cacheTTL = env('CACHE_TTL_MINUTES', 10);
+
+        $leads = Cache::remember( $cacheKey, now()->addMinutes( (int)$cacheTTL ), function () use ( $validatedPerPage, $search ) {
             return Lead::with( 'leadStatus' )
                 ->when( $search, function ( $query, $search ) {
                     return $query->where( 'name', 'like', "%{$search}%" )
