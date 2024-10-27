@@ -21,7 +21,7 @@ Follow these steps to set up the project locally:
 
    Clone the Git repository to your local machine:
    ```bash
-   git clone https://github.com/onedev111/ff_home_assessment.git
+   git clone https://github.com/jaylee9/ff_home_assessment.git
    ```
    ```bash
    cd ff_home_assessment
